@@ -5,7 +5,7 @@ public class VOICE
 {
     
     public var
-        sampleData:uint,         //*const int8_t   
+        sampleData:int,          //*const int8_t   
         loopEnabled:int,         //int8_t          
         sixteenBit:int,          //int8_t          
         stereo:int,              //int8_t          

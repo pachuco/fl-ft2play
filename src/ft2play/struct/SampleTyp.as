@@ -1,7 +1,7 @@
 package ft2play.struct 
 {
 
-public class SampleTyp implements _CStruct
+public class SampleTyp
 {
     
     public var
@@ -15,7 +15,7 @@ public class SampleTyp implements _CStruct
         RelTon:int,  //int8_t  
         skrap:uint,  //uint8_t 
         Name:String, //char[22]
-        Pek:uint;    //*int8_t 
+        Pek:int;     //*int8_t
     
     public function SampleTyp() 
     {

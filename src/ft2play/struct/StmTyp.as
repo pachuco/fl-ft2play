@@ -1,22 +1,22 @@
 package ft2play.struct 
 {
 
-public class StmTyp implements _CStruct
+public class StmTyp
 {
     
     public var
-        InstrOfs:SampleTyp,         //SampleTyp         /* read only */
-        InstrSeg:InstrTyp,          //InstrTyp          /* read only */
-        FinalVol:Number,            //float     
-        OutVol:int,                 //int8_t            /* must be signed */
-        RealVol:int,                //int8_t            /* must be signed */
-        RelTonNr:int,               //int8_t            /* must be signed */
-        FineTune:int,               //int8_t            /* must be signed */
-        OutPan:int,                 //int16_t           /* must be signed */
-        RealPeriod:int,             //int16_t           /* must be signed */
-        FadeOutAmp:int,             //int32_t           /* must be signed */
-        EnvVIPValue:int,            //int16_t           /* must be signed */
-        EnvPIPValue:int,            //int16_t           /* must be signed */
+        InstrOfs:SampleTyp,         //SampleTyp
+        InstrSeg:InstrTyp,          //InstrTyp
+        FinalVol:Number,            //float
+        OutVol:int,                 //int8_t
+        RealVol:int,                //int8_t
+        RelTonNr:int,               //int8_t
+        FineTune:int,               //int8_t
+        OutPan:int,                 //int16_t
+        RealPeriod:int,             //int16_t
+        FadeOutAmp:int,             //int32_t
+        EnvVIPValue:int,            //int16_t
+        EnvPIPValue:int,            //int16_t
         OldVol:uint,                //uint8_t   
         OldPan:uint,                //uint8_t   
         OutPeriod:uint,             //uint16_t  
@@ -67,16 +67,18 @@ public class StmTyp implements _CStruct
         EVibPos:uint,               //uint8_t   
         EVibAmp:uint,               //uint16_t  
         EVibSweep:uint,             //uint16_t  
-        TremorSave:uint,            //uint8_t   
-        TremorPos:uint,             //uint8_t   
-        GlobVolSlideSpeed:uint,     //uint8_t   
-        PanningSlideSpeed:uint,     //uint8_t   
-        Mute:uint,                  //uint8_t   
-        Nr:uint;                    //uint8_t   
+        TremorSave:uint,            //uint8_t
+        TremorPos:uint,             //uint8_t
+        GlobVolSlideSpeed:uint,     //uint8_t
+        PanningSlideSpeed:uint,     //uint8_t
+        Mute:uint,                  //uint8_t
+        Nr:uint;                    //uint8_t
+    
     
     public function StmTyp() 
     {
-        
+        InstrOfs = new SampleTyp();
+        InstrSeg = new InstrTyp();
     }
     
 }

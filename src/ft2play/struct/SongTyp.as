@@ -1,7 +1,7 @@
 package ft2play.struct 
 {
 
-public class SongTyp implements _CStruct
+public class SongTyp
 {
     
     public var
@@ -18,22 +18,28 @@ public class SongTyp implements _CStruct
         Tempo:uint,                 //uint16_t     
         InitSpeed:uint,             //uint16_t     
         InitTempo:uint,             //uint16_t     
-        GlobVol:int,                //int16_t           /* must be signed */
+        GlobVol:int,                //int16_t
         Timer:uint,                 //uint16_t     
         PattDelTime:uint,           //uint8_t      
         PattDelTime2:uint,          //uint8_t      
         PBreakFlag:uint,            //uint8_t      
         PBreakPos:uint,             //uint8_t      
         PosJumpFlag:uint,           //uint8_t      
-        SongTab:ByteArray,          //uint8_t[256] 
+        SongTab:Vector.<uint>,      //uint8_t[256] 
         Ver:uint,                   //uint16_t     
         Name:String,                //char[21]     
         ProgName:String,            //char[21]     
         InstrName:Vector.<String>;  //char[256][23]
+        
+        char InstrName[256][23];
     
     public function SongTyp() 
     {
+        var i:int;
         
+        SongTab     = new Vector.<uint>(256, true);
+        InstrName   = new Vector.<String>(256, true);
+        for(i=0; i<256; ++i) InstrName[i] = "";
     }
     
 }

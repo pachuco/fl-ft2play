@@ -1,7 +1,7 @@
 package ft2play.struct 
 {
 
-public class TonTyp implements _CStruct
+public class TonTyp
 {
     
     public var
@@ -10,7 +10,7 @@ public class TonTyp implements _CStruct
         Vol:uint,       //uint8_t
         EffTyp:uint,    //uint8_t
         Eff:uint;       //uint8_t
-    
+        
     public function TonTyp() 
     {
         
