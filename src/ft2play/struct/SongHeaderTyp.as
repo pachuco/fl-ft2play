@@ -5,7 +5,7 @@ import ft2play.Tools;
 package ft2play.struct 
 {
 
-public class SongHeaderTyp implements PACKED
+public class SongHeaderTyp implements interf.PACKED
 {
     
     public var

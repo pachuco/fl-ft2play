@@ -1,7 +1,7 @@
 package ft2play.struct 
 {
 
-public class InstrTyp
+public class InstrTyp implements interf.MEMCPY
 {
     public var
     SampleSize:uint,            //uint32_t        
@@ -31,6 +31,47 @@ public class InstrTyp
     Reserved:Vector.<uint>,     //uint8_t[15]     
     AntSamp:uint,               //uint16_t        
     Samp:Vector.<SampleTyp>;    //SampleTyp[32]
+    
+    public function MCPY_to(dest:InstrTyp)
+    {
+        var i:int;
+        //var dest:InstrTyp = (InstrTyp)_dest;
+        
+        dest.SampleSize     = SampleSize;
+        dest.TA             = TA.concat();
+        dest.EnvVP          = EnvVP.concat();
+        dest.EnvPP          = EnvPP.concat();
+        dest.EnvVPAnt       = EnvVPAnt;
+        dest.EnvPPAnt       = EnvPPAnt;
+        dest.EnvVSust       = EnvVSust;
+        dest.EnvVRepS       = EnvVRepS;
+        dest.EnvVRepE       = EnvVRepE;
+        dest.EnvPSust       = EnvPSust;
+        dest.EnvPRepS       = EnvPRepS;
+        dest.EnvPRepE       = EnvPRepE;
+        dest.EnvVTyp        = EnvVTyp;
+        dest.EnvPTyp        = EnvPTyp;
+        dest.VibTyp         = VibTyp;
+        dest.VibSweep       = VibSweep;
+        dest.VibDepth       = VibDepth;
+        dest.VibRate        = VibRate;
+        dest.FadeOut        = FadeOut;
+        dest.MIDIOn         = MIDIOn;
+        dest.MIDIChannel    = MIDIChannel;
+        dest.MIDIProgram    = MIDIProgram;
+        dest.MIDIBend       = MIDIBend;
+        dest.Mute           = Mute;
+        dest.Reserved       = Reserved.concat();
+        dest.AntSamp        = AntSamp;
+        dest.Samp = new Vector.<SampleHeaderTyp>(32, true);
+        for (i = 0; i < 32; ++i) Samp[i].MCPY_to(dest.Samp[i]);
+        
+    }
+    
+    public function MCPY_from(src:InstrTyp)
+    {
+        src.MCPY_to(this);
+    }
     
     public function InstrTyp() 
     {

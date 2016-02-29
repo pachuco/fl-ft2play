@@ -1,7 +1,7 @@
 package ft2play.struct 
 {
 
-public class StmTyp
+public class StmTyp implements interf.MEMCPY
 {
     
     public var
@@ -74,6 +74,84 @@ public class StmTyp
         Mute:uint,                  //uint8_t
         Nr:uint;                    //uint8_t
     
+    public function MCPY_to(dest:StmTyp)
+    {
+        //var dest:StmTyp = (StmTyp)_dest;
+        
+        InstrOfs.MCPY_to(dest.InstrOfs);
+        InstrSeg.MCPY_to(dest.InstrSeg);
+        dest.FinalVol               = FinalVol;
+        dest.OutVol                 = OutVol;
+        dest.RealVol                = RealVol;
+        dest.RelTonNr               = RelTonNr;
+        dest.FineTune               = FineTune;
+        dest.OutPan                 = OutPan;
+        dest.RealPeriod             = RealPeriod;
+        dest.FadeOutAmp             = FadeOutAmp;
+        dest.EnvVIPValue            = EnvVIPValue;
+        dest.EnvPIPValue            = EnvPIPValue;
+        dest.OldVol                 = OldVol;
+        dest.OldPan                 = OldPan;
+        dest.OutPeriod              = OutPeriod;
+        dest.FinalPan               = FinalPan;
+        dest.FinalPeriod            = FinalPeriod;
+        dest.EnvSustainActive       = EnvSustainActive;
+        dest.SmpStartPos            = SmpStartPos;
+        dest.InstrNr                = InstrNr;
+        dest.ToneType               = ToneType;
+        dest.EffTyp                 = EffTyp;
+        dest.Eff                    = Eff;
+        dest.SmpOffset              = SmpOffset;
+        dest.WantPeriod             = WantPeriod;
+        dest.WaveCtrl               = WaveCtrl;
+        dest.Status                 = Status;
+        dest.PortaDir               = PortaDir;
+        dest.GlissFunk              = GlissFunk;
+        dest.PortaSpeed             = PortaSpeed;
+        dest.VibPos                 = VibPos;
+        dest.TremPos                = TremPos;
+        dest.VibSpeed               = VibSpeed;
+        dest.VibDepth               = VibDepth;
+        dest.TremSpeed              = TremSpeed;
+        dest.TremDepth              = TremDepth;
+        dest.PattPos                = PattPos;
+        dest.LoopCnt                = LoopCnt;
+        dest.VolSlideSpeed          = VolSlideSpeed;
+        dest.FVolSlideUpSpeed       = FVolSlideUpSpeed;
+        dest.FVolSlideDownSpeed     = FVolSlideDownSpeed;
+        dest.FPortaUpSpeed          = FPortaUpSpeed;
+        dest.FPortaDownSpeed        = FPortaDownSpeed;
+        dest.EPortaUpSpeed          = EPortaUpSpeed;
+        dest.EPortaDownSpeed        = EPortaDownSpeed;
+        dest.PortaUpSpeed           = PortaUpSpeed;
+        dest.PortaDownSpeed         = PortaDownSpeed;
+        dest.RetrigSpeed            = RetrigSpeed;
+        dest.RetrigCnt              = RetrigCnt;
+        dest.RetrigVol              = RetrigVol;
+        dest.VolKolVol              = VolKolVol;
+        dest.TonNr                  = TonNr;
+        dest.FadeOutSpeed           = FadeOutSpeed;
+        dest.EnvVCnt                = EnvVCnt;
+        dest.EnvVPos                = EnvVPos;
+        dest.EnvVAmp                = EnvVAmp;
+        dest.EnvPCnt                = EnvPCnt;
+        dest.EnvPPos                = EnvPPos;
+        dest.EnvPAmp                = EnvPAmp;
+        dest.EVibPos                = EVibPos;
+        dest.EVibAmp                = EVibAmp;
+        dest.EVibSweep              = EVibSweep;
+        dest.TremorSave             = TremorSave;
+        dest.TremorPos              = TremorPos;
+        dest.GlobVolSlideSpeed      = GlobVolSlideSpeed;
+        dest.PanningSlideSpeed      = PanningSlideSpeed;
+        dest.Mute                   = Mute;
+        dest.Nr                     = Nr;
+    }
+    
+    public function MCPY_from(src:StmTyp)
+    {
+        src.MCPY_to(this);
+    }
     
     public function StmTyp() 
     {
