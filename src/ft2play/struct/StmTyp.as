@@ -1,7 +1,7 @@
 package ft2play.struct 
 {
 
-public class StmTyp implements interf.MEMCPY
+public class StmTyp implements interf.MEMCPY, interf.MSET_zero
 {
     
     public var
@@ -146,6 +146,78 @@ public class StmTyp implements interf.MEMCPY
         dest.PanningSlideSpeed      = PanningSlideSpeed;
         dest.Mute                   = Mute;
         dest.Nr                     = Nr;
+    }
+    
+    public function MSET_to0()
+    {
+        InstrOfs.MSET_to0();
+        InstrSeg.MSET_to0();
+        FinalVol               = 0.0;
+        OutVol                 = 0;
+        RealVol                = 0;
+        RelTonNr               = 0;
+        FineTune               = 0;
+        OutPan                 = 0;
+        RealPeriod             = 0;
+        FadeOutAmp             = 0;
+        EnvVIPValue            = 0;
+        EnvPIPValue            = 0;
+        OldVol                 = 0;
+        OldPan                 = 0;
+        OutPeriod              = 0;
+        FinalPan               = 0;
+        FinalPeriod            = 0;
+        EnvSustainActive       = 0;
+        SmpStartPos            = 0;
+        InstrNr                = 0;
+        ToneType               = 0;
+        EffTyp                 = 0;
+        Eff                    = 0;
+        SmpOffset              = 0;
+        WantPeriod             = 0;
+        WaveCtrl               = 0;
+        Status                 = 0;
+        PortaDir               = 0;
+        GlissFunk              = 0;
+        PortaSpeed             = 0;
+        VibPos                 = 0;
+        TremPos                = 0;
+        VibSpeed               = 0;
+        VibDepth               = 0;
+        TremSpeed              = 0;
+        TremDepth              = 0;
+        PattPos                = 0;
+        LoopCnt                = 0;
+        VolSlideSpeed          = 0;
+        FVolSlideUpSpeed       = 0;
+        FVolSlideDownSpeed     = 0;
+        FPortaUpSpeed          = 0;
+        FPortaDownSpeed        = 0;
+        EPortaUpSpeed          = 0;
+        EPortaDownSpeed        = 0;
+        PortaUpSpeed           = 0;
+        PortaDownSpeed         = 0;
+        RetrigSpeed            = 0;
+        RetrigCnt              = 0;
+        RetrigVol              = 0;
+        VolKolVol              = 0;
+        TonNr                  = 0;
+        FadeOutSpeed           = 0;
+        EnvVCnt                = 0;
+        EnvVPos                = 0;
+        EnvVAmp                = 0;
+        EnvPCnt                = 0;
+        EnvPPos                = 0;
+        EnvPAmp                = 0;
+        EVibPos                = 0;
+        EVibAmp                = 0;
+        EVibSweep              = 0;
+        TremorSave             = 0;
+        TremorPos              = 0;
+        GlobVolSlideSpeed      = 0;
+        PanningSlideSpeed      = 0;
+        Mute                   = 0;
+        Nr                     = 0;
     }
     
     public function MCPY_from(src:StmTyp)

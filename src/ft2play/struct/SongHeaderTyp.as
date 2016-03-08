@@ -5,7 +5,7 @@ import ft2play.Tools;
 package ft2play.struct 
 {
 
-public class SongHeaderTyp implements interf.PACKED
+public class SongHeaderTyp implements interf.PACKED, interf.MSET_zero
 {
     
     public var
@@ -48,6 +48,26 @@ public class SongHeaderTyp implements interf.PACKED
         for(i=0; i<256; ++i) SongTab[i] = ba.readUnsignedByte();
         
         Tools.assert(pos == ba.position - SIZEOF());
+    }
+    
+    public function MSET_to0()
+    {
+        var i:int;
+        
+        Sig         = "";
+        Name        = "";
+        ProggName   = "";
+        Ver         = 0;
+        HeaderSize  = 0;
+        Len         = 0;
+        RepS        = 0;
+        AntChn      = 0;
+        AntPtn      = 0;
+        AntInstrs   = 0;
+        Flags       = 0;
+        DefTempo    = 0;
+        DefSpeed    = 0;
+        for(i=0; i<256; ++i) SongTab[i] = 0;
     }
     
     public function SongHeaderTyp() 

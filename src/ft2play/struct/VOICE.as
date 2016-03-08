@@ -1,7 +1,7 @@
 package ft2play.struct 
 {
 
-public class VOICE 
+public class VOICE implements interf.MSET_zero
 {
     
     public var
@@ -20,9 +20,9 @@ public class VOICE
         incRate:Number,          //float           
         frac:Number,             //float           
         volumeL:Number,          //float           
-        volumeR:Number,          //float           
+        volumeR:Number;          //float           
 
-    //#ifdef USE_VOL_RAMP
+/*//#ifdef USE_VOL_RAMP
         targetVolL:Number,       //float           
         targetVolR:Number,       //float           
         volDeltaL:Number,        //float           
@@ -30,7 +30,28 @@ public class VOICE
         fader:Number,            //float           
         faderDelta:Number,       //float           
         faderDest:Number;        //float           
-    //#endif
+*///#endif
+    
+    public function MSET_to0()
+    {
+        sampleData          = 0;
+        loopEnabled         = 0;
+        sixteenBit          = 0;
+        stereo              = 0;
+        loopBidi            = 0;
+        loopingForward      = 0;
+        sampleLength        = 0;
+        sampleLoopBegin     = 0;
+        sampleLoopEnd       = 0;
+        samplePosition      = 0;
+        sampleLoopLength    = 0;
+        
+        incRate             = 0.0;
+        frac                = 0.0;
+        volumeL             = 0.0;
+        volumeR             = 0.0;
+    }
+    
     
     public function VOICE() 
     {

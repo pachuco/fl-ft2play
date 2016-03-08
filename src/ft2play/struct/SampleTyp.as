@@ -1,7 +1,7 @@
 package ft2play.struct 
 {
 
-public class SampleTyp implements interf.MEMCPY
+public class SampleTyp implements interf.MEMCPY, interf.MSET_zero
 {
     
     public var
@@ -37,6 +37,21 @@ public class SampleTyp implements interf.MEMCPY
     public function MCPY_from(_src:SampleTyp)
     {
         src.MCPY_to(this);
+    }
+    
+    public function MSET_to0()
+    {
+        Len    = 0;
+        RepS   = 0;
+        RepL   = 0;
+        Vol    = 0;
+        Fine   = 0;
+        Typ    = 0;
+        Pan    = 0;
+        RelTon = 0;
+        skrap  = 0;
+        Name   = "";
+        Pek    = -1;    //*NULL
     }
     
     public function SampleTyp() 

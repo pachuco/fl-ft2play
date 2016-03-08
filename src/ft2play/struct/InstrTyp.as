@@ -1,7 +1,7 @@
 package ft2play.struct 
 {
 
-public class InstrTyp implements interf.MEMCPY
+public class InstrTyp implements interf.MEMCPY, interf.MSET_zero
 {
     public var
     SampleSize:uint,            //uint32_t        
@@ -63,7 +63,7 @@ public class InstrTyp implements interf.MEMCPY
         dest.Mute           = Mute;
         dest.Reserved       = Reserved.concat();
         dest.AntSamp        = AntSamp;
-        dest.Samp = new Vector.<SampleHeaderTyp>(32, true);
+        //dest.Samp = new Vector.<SampleHeaderTyp>(32, true);
         for (i = 0; i < 32; ++i) Samp[i].MCPY_to(dest.Samp[i]);
         
     }
@@ -71,6 +71,39 @@ public class InstrTyp implements interf.MEMCPY
     public function MCPY_from(src:InstrTyp)
     {
         src.MCPY_to(this);
+    }
+    
+    public function MSET_to0()
+    {
+        var i:int;
+        
+        SampleSize     = 0;
+        for (i = 0; i < 96; ++i) TA[i] = 0;
+        for (i = 0; i < 12*2; ++i) EnvVP[i] = 0;
+        for (i = 0; i < 12*2; ++i) EnvPP[i] = 0;
+        EnvVPAnt       = 0;
+        EnvPPAnt       = 0;
+        EnvVSust       = 0;
+        EnvVRepS       = 0;
+        EnvVRepE       = 0;
+        EnvPSust       = 0;
+        EnvPRepS       = 0;
+        EnvPRepE       = 0;
+        EnvVTyp        = 0;
+        EnvPTyp        = 0;
+        VibTyp         = 0;
+        VibSweep       = 0;
+        VibDepth       = 0;
+        VibRate        = 0;
+        FadeOut        = 0;
+        MIDIOn         = 0;
+        MIDIChannel    = 0;
+        MIDIProgram    = 0;
+        MIDIBend       = 0;
+        Mute           = 0;
+        for (i = 0; i < 15; ++i) Reserved[i] = 0;
+        AntSamp        = 0;
+        for (i = 0; i < 32; ++i) Samp[i].MSET_to0();
     }
     
     public function InstrTyp() 

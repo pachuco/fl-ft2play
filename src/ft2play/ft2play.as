@@ -79,15 +79,16 @@ public class ft2play
         IS_Vol:int      = 1,
         IS_Period:int   = 2,
         IS_NyTon:int    = 4,
-        
+/*//#ifdef USE_VOL_RAMP
         //with vol ramping
         MAX_VOICES   = 127,
         TOTAL_VOICES = 254,
         SPARE_OFFSET = 127;
-        
+*///#else        
         //without ramping
-        //MAX_VOICES   = 127,
-        //TOTAL_VOICES = 127
+        MAX_VOICES   = 127,
+        TOTAL_VOICES = 127;
+//#endif
         
     private var InstrHeaderSize:uint = (InstrHeaderTyp.SIZEOF - (32 * SampleHeaderTyp.SIZEOF));
     
@@ -133,10 +134,10 @@ static float f_audioFreq;
 private var mixingMutex:int;    //int8_t
 static volatile int8_t isMixing;
 
-//#ifdef USE_VOL_RAMP
+/*//#ifdef USE_VOL_RAMP
     f_samplesPerFrame005:Number;
     f_samplesPerFrame010:Number;
-//#endif
+*///#endif
 
 //TODO
 //pre-NULL'd pointers
@@ -1407,356 +1408,518 @@ private function RelocateTon(inPeriod:int, int8_t addNote:int, ch:StmTyp):int
         Vibrato2(ch);
     }
     
-private function DoEffects(ch:StmTyp):void
-{
-    int8_t note;
-    uint8_t tmpEff;
-    uint8_t tremorData;
-    uint8_t tremorSign;
-    uint8_t tmpTrem;
-    uint16_t i;
-    uint16_t tick;
-
-    //*** VOLUME COLUMN EFFECTS (TICKS >0) ***
-
-    //volume slide down
-    if ((ch.VolKolVol & 0xF0) == 0x60)
+    private function DoEffects(ch:StmTyp):void
     {
-        ch.RealVol -= (ch.VolKolVol & 0x0F);
-        if (ch.RealVol < 0) ch.RealVol = 0;
+        var note:int;           //int8_t
+        var tmpEff:uint;        //uint8_t
+        var tremorData:uint;    //uint8_t
+        var tremorSign:uint;    //uint8_t
+        var tmpTrem:uint;       //uint8_t
+        var i:uint;             //uint16_t
+        var tick:uint;          //uint16_t
 
-        ch.OutVol  = ch.RealVol;
-        ch.Status |= IS_Vol;
-    }
+        //*** VOLUME COLUMN EFFECTS (TICKS >0) ***
 
-    //volume slide up
-    else if ((ch.VolKolVol & 0xF0) == 0x70)
-    {
-        ch.RealVol += (ch.VolKolVol & 0x0F);
-        if (ch.RealVol > 64) ch.RealVol = 64;
-
-        ch.OutVol  = ch.RealVol;
-        ch.Status |= IS_Vol;
-    }
-
-    //vibrato (+ set vibrato depth)
-    else if ((ch.VolKolVol & 0xF0) == 0xB0)
-    {
-        if (ch.VolKolVol != 0xB0)
-            ch.VibDepth = ch.VolKolVol & 0x0F;
-
-        Vibrato2(ch);
-    }
-
-    //pan slide left
-    else if ((ch.VolKolVol & 0xF0) == 0xD0)
-    {
-        ch.OutPan -= (ch.VolKolVol & 0x0F);
-        if (ch.OutPan < 0) ch.OutPan = 0;
-
-        ch.Status |= IS_Vol;
-    }
-
-    //pan slide right
-    else if ((ch.VolKolVol & 0xF0) == 0xE0)
-    {
-        ch.OutPan += (ch.VolKolVol & 0x0F);
-        if (ch.OutPan > 255) ch.OutPan = 255;
-
-        ch.Status |= IS_Vol;
-    }
-
-    //tone portamento
-    else if ((ch.VolKolVol & 0xF0) == 0xF0) TonePorta(ch);
-
-    //*** MAIN EFFECTS (TICKS >0) ***
-
-    if (((ch.Eff == 0) && (ch.EffTyp == 0)) || (ch.EffTyp >= 36)) return;
-
-    //0xy - Arpeggio
-    if (ch.EffTyp == 0)
-    {
-        tick = Song.Timer;
-        note = 0;
-
-        //FT2 'out of boundary' arp LUT simulation
-             if (tick  > 16) tick  = 2;
-        else if (tick == 15) tick  = 0;
-        else                 tick %= 3;
-
-
-        //this simulation doesn't work properly for >=128 tick arps,
-        //but you'd need to hexedit the initial speed to get >31
-       
-        if (!tick)
+        //volume slide down
+        if ((ch.VolKolVol & 0xF0) == 0x60)
         {
-            ch.OutPeriod = ch.RealPeriod;
-        }
-        else
-        {
-                 if (tick == 1) note = ch.Eff >> 4;
-            else if (tick == 2) note = ch.Eff & 0x0F;
+            ch.RealVol -= (ch.VolKolVol & 0x0F);
+            if (ch.RealVol < 0) ch.RealVol = 0;
 
-            ch.OutPeriod = RelocateTon(ch.RealPeriod, note, ch);
+            ch.OutVol  = ch.RealVol;
+            ch.Status |= IS_Vol;
         }
 
-        ch.Status |= IS_Period;
-    }
-
-    //1xx - period slide up
-    else if (ch.EffTyp == 1)
-    {
-        tmpEff = ch.Eff;
-        if (!tmpEff)
-            tmpEff = ch.PortaUpSpeed;
-
-        ch.PortaUpSpeed = tmpEff;
-
-        ch.RealPeriod -= (tmpEff * 4);
-        if (ch.RealPeriod < 1) ch.RealPeriod = 1;
-
-        ch.OutPeriod = ch.RealPeriod;
-        ch.Status   |= IS_Period;
-    }
-
-    //2xx - period slide up
-    else if (ch.EffTyp == 2)
-    {
-        tmpEff = ch.Eff;
-        if (!tmpEff)
-            tmpEff = ch.PortaUpSpeed;
-
-        ch.PortaUpSpeed = tmpEff;
-
-        ch.RealPeriod += (tmpEff * 4);
-        if (ch.RealPeriod > (32000 - 1)) ch.RealPeriod = 32000 - 1;
-
-        ch.OutPeriod = ch.RealPeriod;
-        ch.Status   |= IS_Period;
-    }
-
-    //3xx - tone portamento
-    else if (ch.EffTyp == 3) TonePorta(ch);
-
-    //4xy - vibrato
-    else if (ch.EffTyp == 4) Vibrato(ch);
-
-    //5xy - tone portamento + volume slide
-    else if (ch.EffTyp == 5)
-    {
-        TonePorta(ch);
-        Volume(ch);
-    }
-
-    //6xy - vibrato + volume slide
-    else if (ch.EffTyp == 6)
-    {
-        Vibrato2(ch);
-        Volume(ch);
-    }
-
-    //7xy - tremolo
-    else if (ch.EffTyp == 7)
-    {
-        tmpEff = ch.Eff;
-        if (tmpEff)
+        //volume slide up
+        else if ((ch.VolKolVol & 0xF0) == 0x70)
         {
-            if (tmpEff & 0x0F) ch.TremDepth = tmpEff & 0x0F;
-            if (tmpEff & 0xF0) ch.TremSpeed = (tmpEff >> 4) * 4;
+            ch.RealVol += (ch.VolKolVol & 0x0F);
+            if (ch.RealVol > 64) ch.RealVol = 64;
+
+            ch.OutVol  = ch.RealVol;
+            ch.Status |= IS_Vol;
         }
 
-        tmpTrem = (ch.TremPos / 4) & 0x1F;
-
-        switch ((ch.WaveCtrl >> 4) & 3)
+        //vibrato (+ set vibrato depth)
+        else if ((ch.VolKolVol & 0xF0) == 0xB0)
         {
-            //0: sine
-            case 0:
-            {
-                tmpTrem = VibTab[tmpTrem];
-            }
-            break;
+            if (ch.VolKolVol != 0xB0)
+                ch.VibDepth = ch.VolKolVol & 0x0F;
 
-            //1: ramp
-            case 1:
-            {
-                tmpTrem *= 8;
-                if (ch.VibPos >= 128) tmpTrem ^= 0xFF; //FT2 bug, should've been TremPos
-            }
-            break;
-
-            //2/3: square
-            default:
-            {
-                tmpTrem = 255;
-            }
-            break;
+            Vibrato2(ch);
         }
 
-        tmpTrem = (tmpTrem * ch.TremDepth) / 64;
-
-        if (ch.TremPos >= 128)
+        //pan slide left
+        else if ((ch.VolKolVol & 0xF0) == 0xD0)
         {
-            ch.OutVol = ch.RealVol - tmpTrem;
-            if (ch.OutVol < 0) ch.OutVol = 0;
-        }
-        else
-        {
-            ch.OutVol = ch.RealVol + tmpTrem;
-            if (ch.OutVol > 64) ch.OutVol = 64;
-        }
-
-        ch.TremPos += ch.TremSpeed;
-
-        ch.Status |= IS_Vol;
-    }
-
-    //Axy - volume slide
-    else if (ch.EffTyp == 10) Volume(ch); //actually volume slide
-
-    //Exy - E effects
-    else if (ch.EffTyp == 14)
-    {
-        //E9x - note retrigger
-        if ((ch.Eff & 0xF0) == 0x90)
-        {
-            if (ch.Eff != 0x90) //E90 is handled in GetNewNote()
-            {
-                if (!((Song.Tempo - Song.Timer) % (ch.Eff & 0x0F)))
-                {
-                    StartTone(0, 0, 0, ch);
-                    RetrigEnvelopeVibrato(ch);
-                }
-            }
-        }
-
-        //ECx - note cut
-        else if ((ch.Eff & 0xF0) == 0xC0)
-        {
-            if (((Song.Tempo - Song.Timer) & 0x00FF) == (ch.Eff & 0x0F))
-            {
-                ch.OutVol  = 0;
-                ch.RealVol = 0;
-                ch.Status |= IS_Vol;
-            }
-        }
-
-        //EDx - note delay
-        else if ((ch.Eff & 0xF0) == 0xD0)
-        {
-            if (((Song.Tempo - Song.Timer) & 0x00FF) == (ch.Eff & 0x0F))
-            {
-                StartTone(ch.ToneType & 0x00FF, 0, 0, ch);
-
-                if (ch.ToneType & 0xFF00)
-                    RetrigVolume(ch);
-
-                RetrigEnvelopeVibrato(ch);
-
-                if ((ch.VolKolVol >= 0x10) && (ch.VolKolVol <= 0x50))
-                {
-                    ch.OutVol  = ch.VolKolVol - 16;
-                    ch.RealVol = ch.OutVol;
-                }
-                else if ((ch.VolKolVol >= 0xC0) && (ch.VolKolVol <= 0xCF))
-                {
-                    ch.OutPan = (ch.VolKolVol & 0x0F) * 16;
-                }
-            }
-        }
-    }
-
-    //Hxy - global volume slide
-    else if (ch.EffTyp == 17)
-    {
-        tmpEff = ch.Eff;
-        if (!tmpEff)
-            tmpEff = ch.GlobVolSlideSpeed;
-
-        ch.GlobVolSlideSpeed = tmpEff;
-
-        if (!(tmpEff & 0xF0))
-        {
-            Song.GlobVol -= tmpEff;
-            if (Song.GlobVol < 0) Song.GlobVol = 0;
-        }
-        else
-        {
-            Song.GlobVol += (tmpEff >> 4);
-            if (Song.GlobVol > 64) Song.GlobVol = 64;
-        }
-
-        for (i = 0; i < Song.AntChn; ++i)
-            Stm[i].Status |= IS_Vol;
-    }
-
-    //Kxx - key off
-    else if (ch.EffTyp == 20)
-    {
-        if (((Song.Tempo - Song.Timer) & 31) == (ch.Eff & 0x0F))
-            KeyOff(ch);
-    }
-
-    //Pxy - panning slide
-    else if (ch.EffTyp == 25)
-    {
-        tmpEff = ch.Eff;
-        if (!tmpEff)
-            tmpEff = ch.PanningSlideSpeed;
-
-        ch.PanningSlideSpeed = tmpEff;
-
-        if (!(ch.Eff & 0xF0))
-        {
-            ch.OutPan += (ch.Eff >> 4);
-            if (ch.OutPan > 255) ch.OutPan = 255;
-        }
-        else
-        {
-            ch.OutPan -= (ch.Eff & 0x0F);
+            ch.OutPan -= (ch.VolKolVol & 0x0F);
             if (ch.OutPan < 0) ch.OutPan = 0;
+
+            ch.Status |= IS_Vol;
         }
 
-        ch.Status |= IS_Vol;
-    }
-
-    //Rxy - multi note retrig
-    else if (ch.EffTyp == 27) MultiRetrig(ch);
-
-    //Txy - tremor
-    else if (ch.EffTyp == 29)
-    {
-        tmpEff = ch.Eff;
-        if (!tmpEff)
-            tmpEff = ch.TremorSave;
-
-        ch.TremorSave = tmpEff;
-
-        tremorSign = ch.TremorPos & 0x80;
-        tremorData = ch.TremorPos & 0x7F;
-
-        tremorData--;
-        if (tremorData & 0x80)
+        //pan slide right
+        else if ((ch.VolKolVol & 0xF0) == 0xE0)
         {
-            if (tremorSign == 0x80)
+            ch.OutPan += (ch.VolKolVol & 0x0F);
+            if (ch.OutPan > 255) ch.OutPan = 255;
+
+            ch.Status |= IS_Vol;
+        }
+
+        //tone portamento
+        else if ((ch.VolKolVol & 0xF0) == 0xF0) TonePorta(ch);
+
+        //*** MAIN EFFECTS (TICKS >0) ***
+
+        if (((ch.Eff == 0) && (ch.EffTyp == 0)) || (ch.EffTyp >= 36)) return;
+
+        //0xy - Arpeggio
+        if (ch.EffTyp == 0)
+        {
+            tick = Song.Timer;
+            note = 0;
+
+            //FT2 'out of boundary' arp LUT simulation
+                 if (tick  > 16) tick  = 2;
+            else if (tick == 15) tick  = 0;
+            else                 tick %= 3;
+
+
+            //this simulation doesn't work properly for >=128 tick arps,
+            //but you'd need to hexedit the initial speed to get >31
+           
+            if (!tick)
             {
-                tremorSign = 0x00;
-                tremorData = tmpEff & 0x0F;
+                ch.OutPeriod = ch.RealPeriod;
             }
             else
             {
-                tremorSign = 0x80;
-                tremorData = tmpEff >> 4;
+                     if (tick == 1) note = ch.Eff >> 4;
+                else if (tick == 2) note = ch.Eff & 0x0F;
+
+                ch.OutPeriod = RelocateTon(ch.RealPeriod, note, ch);
+            }
+
+            ch.Status |= IS_Period;
+        }
+
+        //1xx - period slide up
+        else if (ch.EffTyp == 1)
+        {
+            tmpEff = ch.Eff;
+            if (!tmpEff)
+                tmpEff = ch.PortaUpSpeed;
+
+            ch.PortaUpSpeed = tmpEff;
+
+            ch.RealPeriod -= (tmpEff * 4);
+            if (ch.RealPeriod < 1) ch.RealPeriod = 1;
+
+            ch.OutPeriod = ch.RealPeriod;
+            ch.Status   |= IS_Period;
+        }
+
+        //2xx - period slide up
+        else if (ch.EffTyp == 2)
+        {
+            tmpEff = ch.Eff;
+            if (!tmpEff)
+                tmpEff = ch.PortaUpSpeed;
+
+            ch.PortaUpSpeed = tmpEff;
+
+            ch.RealPeriod += (tmpEff * 4);
+            if (ch.RealPeriod > (32000 - 1)) ch.RealPeriod = 32000 - 1;
+
+            ch.OutPeriod = ch.RealPeriod;
+            ch.Status   |= IS_Period;
+        }
+
+        //3xx - tone portamento
+        else if (ch.EffTyp == 3) TonePorta(ch);
+
+        //4xy - vibrato
+        else if (ch.EffTyp == 4) Vibrato(ch);
+
+        //5xy - tone portamento + volume slide
+        else if (ch.EffTyp == 5)
+        {
+            TonePorta(ch);
+            Volume(ch);
+        }
+
+        //6xy - vibrato + volume slide
+        else if (ch.EffTyp == 6)
+        {
+            Vibrato2(ch);
+            Volume(ch);
+        }
+
+        //7xy - tremolo
+        else if (ch.EffTyp == 7)
+        {
+            tmpEff = ch.Eff;
+            if (tmpEff)
+            {
+                if (tmpEff & 0x0F) ch.TremDepth = tmpEff & 0x0F;
+                if (tmpEff & 0xF0) ch.TremSpeed = (tmpEff >> 4) * 4;
+            }
+
+            tmpTrem = (ch.TremPos / 4) & 0x1F;
+
+            switch ((ch.WaveCtrl >> 4) & 3)
+            {
+                //0: sine
+                case 0:
+                    tmpTrem = VibTab[tmpTrem];
+                    break;
+                //1: ramp
+                case 1:
+                    tmpTrem *= 8;
+                    if (ch.VibPos >= 128) tmpTrem ^= 0xFF; //FT2 bug, should've been TremPos
+                    break;
+                //2/3: square
+                default:
+                    tmpTrem = 255;
+                    break;
+            }
+
+            tmpTrem = (tmpTrem * ch.TremDepth) / 64;
+
+            if (ch.TremPos >= 128)
+            {
+                ch.OutVol = ch.RealVol - tmpTrem;
+                if (ch.OutVol < 0) ch.OutVol = 0;
+            }
+            else
+            {
+                ch.OutVol = ch.RealVol + tmpTrem;
+                if (ch.OutVol > 64) ch.OutVol = 64;
+            }
+
+            ch.TremPos += ch.TremSpeed;
+
+            ch.Status |= IS_Vol;
+        }
+
+        //Axy - volume slide
+        else if (ch.EffTyp == 10) Volume(ch); //actually volume slide
+
+        //Exy - E effects
+        else if (ch.EffTyp == 14)
+        {
+            //E9x - note retrigger
+            if ((ch.Eff & 0xF0) == 0x90)
+            {
+                if (ch.Eff != 0x90) //E90 is handled in GetNewNote()
+                {
+                    if (!((Song.Tempo - Song.Timer) % (ch.Eff & 0x0F)))
+                    {
+                        StartTone(0, 0, 0, ch);
+                        RetrigEnvelopeVibrato(ch);
+                    }
+                }
+            }
+
+            //ECx - note cut
+            else if ((ch.Eff & 0xF0) == 0xC0)
+            {
+                if (((Song.Tempo - Song.Timer) & 0x00FF) == (ch.Eff & 0x0F))
+                {
+                    ch.OutVol  = 0;
+                    ch.RealVol = 0;
+                    ch.Status |= IS_Vol;
+                }
+            }
+
+            //EDx - note delay
+            else if ((ch.Eff & 0xF0) == 0xD0)
+            {
+                if (((Song.Tempo - Song.Timer) & 0x00FF) == (ch.Eff & 0x0F))
+                {
+                    StartTone(ch.ToneType & 0x00FF, 0, 0, ch);
+
+                    if (ch.ToneType & 0xFF00)
+                        RetrigVolume(ch);
+
+                    RetrigEnvelopeVibrato(ch);
+
+                    if ((ch.VolKolVol >= 0x10) && (ch.VolKolVol <= 0x50))
+                    {
+                        ch.OutVol  = ch.VolKolVol - 16;
+                        ch.RealVol = ch.OutVol;
+                    }
+                    else if ((ch.VolKolVol >= 0xC0) && (ch.VolKolVol <= 0xCF))
+                    {
+                        ch.OutPan = (ch.VolKolVol & 0x0F) * 16;
+                    }
+                }
             }
         }
 
-        ch.TremorPos = tremorData | tremorSign;
+        //Hxy - global volume slide
+        else if (ch.EffTyp == 17)
+        {
+            tmpEff = ch.Eff;
+            if (!tmpEff)
+                tmpEff = ch.GlobVolSlideSpeed;
 
-        ch.OutVol  = tremorSign ? ch.RealVol : 0;
-        ch.Status |= IS_Vol;
+            ch.GlobVolSlideSpeed = tmpEff;
+
+            if (!(tmpEff & 0xF0))
+            {
+                Song.GlobVol -= tmpEff;
+                if (Song.GlobVol < 0) Song.GlobVol = 0;
+            }
+            else
+            {
+                Song.GlobVol += (tmpEff >> 4);
+                if (Song.GlobVol > 64) Song.GlobVol = 64;
+            }
+
+            for (i = 0; i < Song.AntChn; ++i)
+                Stm[i].Status |= IS_Vol;
+        }
+
+        //Kxx - key off
+        else if (ch.EffTyp == 20)
+        {
+            if (((Song.Tempo - Song.Timer) & 31) == (ch.Eff & 0x0F))
+                KeyOff(ch);
+        }
+
+        //Pxy - panning slide
+        else if (ch.EffTyp == 25)
+        {
+            tmpEff = ch.Eff;
+            if (!tmpEff)
+                tmpEff = ch.PanningSlideSpeed;
+
+            ch.PanningSlideSpeed = tmpEff;
+
+            if (!(ch.Eff & 0xF0))
+            {
+                ch.OutPan += (ch.Eff >> 4);
+                if (ch.OutPan > 255) ch.OutPan = 255;
+            }
+            else
+            {
+                ch.OutPan -= (ch.Eff & 0x0F);
+                if (ch.OutPan < 0) ch.OutPan = 0;
+            }
+
+            ch.Status |= IS_Vol;
+        }
+
+        //Rxy - multi note retrig
+        else if (ch.EffTyp == 27) MultiRetrig(ch);
+
+        //Txy - tremor
+        else if (ch.EffTyp == 29)
+        {
+            tmpEff = ch.Eff;
+            if (!tmpEff)
+                tmpEff = ch.TremorSave;
+
+            ch.TremorSave = tmpEff;
+
+            tremorSign = ch.TremorPos & 0x80;
+            tremorData = ch.TremorPos & 0x7F;
+
+            tremorData--;
+            if (tremorData & 0x80)
+            {
+                if (tremorSign == 0x80)
+                {
+                    tremorSign = 0x00;
+                    tremorData = tmpEff & 0x0F;
+                }
+                else
+                {
+                    tremorSign = 0x80;
+                    tremorData = tmpEff >> 4;
+                }
+            }
+
+            ch.TremorPos = tremorData | tremorSign;
+
+            ch.OutVol  = tremorSign ? ch.RealVol : 0;
+            ch.Status |= IS_Vol;
+        }
+    }
+    
+void MainPlayer(void) //periodically called from mixer
+{
+    //TODO: memcpy shenanigans
+    var ch:StmTyp;      //*StmTyp
+    var s:SampleTyp;    //SampleTyp
+
+    var tickzero:int;   //int8_t
+    var i:uint;         //uint8_t
+    var chNr:uint;      //uint8_t
+
+    if (!MusicPaused && Playing)
+    {
+        tickzero = 0;
+
+        if (--Song.Timer == 0)
+        {
+            Song.Timer = Song.Tempo;
+            tickzero   = 1;
+        }
+
+        if (tickzero)
+        {
+            if (!Song.PattDelTime)
+            {
+                for (i = 0; i < Song.AntChn; ++i)
+                {
+                    if (Patt[Song.PattNr])
+                    //TODO convert to offset
+                        GetNewNote(&Stm[i], &Patt[Song.PattNr][(Song.PattPos * MAX_VOICES) + i]);
+                    else
+                        GetNewNote(&Stm[i], &NilPatternLine[(Song.PattPos * MAX_VOICES) + i]);
+
+                    FixaEnvelopeVibrato(Stm[i]);
+                }
+            }
+            else
+            {
+                for (i = 0; i < Song.AntChn; ++i)
+                {
+                    DoEffects(Stm[i]);
+                    FixaEnvelopeVibrato(Stm[i]);
+                }
+            }
+        }
+        else
+        {
+            for (i = 0; i < Song.AntChn; ++i)
+            {
+                DoEffects(Stm[i]);
+                FixaEnvelopeVibrato(Stm[i]);
+            }
+        }
+
+        if (Song.Timer == 1)
+        {
+            Song.PattPos++;
+
+            if (Song.PattDelTime)
+            {
+                Song.PattDelTime2 = Song.PattDelTime;
+                Song.PattDelTime  = 0;
+            }
+
+            if (Song.PattDelTime2)
+            {
+                Song.PattDelTime2--;
+                if (Song.PattDelTime2) Song.PattPos--;
+            }
+
+            if (Song.PBreakFlag)
+            {
+                Song.PBreakFlag = 0;
+                Song.PattPos    = Song.PBreakPos;
+            }
+
+            if ((Song.PattPos >= Song.PattLen) || Song.PosJumpFlag)
+            {
+                Song.PattPos     = Song.PBreakPos;
+                Song.PBreakPos   = 0;
+                Song.PosJumpFlag = 0;
+
+                Song.SongPos++;
+                if (Song.SongPos >= Song.Len)
+                    Song.SongPos  = Song.RepS;
+
+                Song.PattNr  = Song.SongTab[Song.SongPos];
+                Song.PattLen = PattLens[Song.PattNr];
+            }
+        }
+    }
+    else
+    {
+        for (i = 0; i < Song.AntChn; ++i)
+            FixaEnvelopeVibrato(Stm[i]);
+    }
+
+    //update mixer
+    for (i = 0; i < Song.AntChn; ++i)
+    {
+        ch   = Stm[i];
+        chNr = ch.Nr;
+
+        if (ch.Status & IS_NyTon)
+        {
+            ch.InstrOfs.MCPY_to(s);
+
+/*//#ifdef USE_VOL_RAMP
+            if (voiceIsActive(chNr))
+            {
+                memcpy(voice + SPARE_OFFSET + chNr, voice + chNr, sizeof (VOICE));
+
+                voice[SPARE_OFFSET + chNr].faderDest  = 0.0f;
+                voice[SPARE_OFFSET + chNr].faderDelta =
+                    (voice[SPARE_OFFSET + chNr].faderDest - voice[SPARE_OFFSET + chNr].fader) * f_samplesPerFrame010;
+            }
+*///#endif
+            voiceSetSource(chNr, s.Pek, s.Len, s.RepL, s.RepS + s.RepL, s.Typ & 3, s.Typ & 16, s.Typ & 32);
+            voiceSetSamplePosition(chNr, ch.SmpStartPos);
+
+/*//#ifdef USE_VOL_RAMP
+            voice[chNr].fader      = 0.0f;
+            voice[chNr].faderDest  = 1.0f;
+            voice[chNr].faderDelta = (voice[chNr].faderDest - voice[chNr].fader) * f_samplesPerFrame005;
+*///#endif
+        }
+
+        if (ch.Status & IS_Vol)
+            voiceSetVolume(chNr, ch.FinalVol, ch.FinalPan);
+
+        if (ch.Status & IS_Period)
+            voiceSetSamplingFrequency(chNr, GetFrequenceValue(ch.FinalPeriod));
+
+        ch.Status = 0;
     }
 }
     
-    
+    private function StopVoices(void)
+    {
+        var i:uint;     //uint8_t
+        var ch:StmTyp;  //*StmTyp
+
+        for (i = 0; i < MAX_VOICES; ++i)
+        {
+            voice[i].MSET_to0();
+            Stm[i].MSET_to0();
+        }
+
+        for (i = 0; i < MAX_VOICES; ++i)
+        {
+            ch = Stm[i];
+
+            ch.Nr       = i;
+            ch.ToneType = 0;
+            ch.RelTonNr = 0;
+            ch.InstrNr  = 0;
+            Instr[0].MCPY_to(ch.InstrSeg);
+            ch.Status   = IS_Vol;
+            ch.RealVol  = 0;
+            ch.OutVol   = 0;
+            ch.OldVol   = 0;
+            ch.FinalVol = 0.0;
+            ch.OldPan   = 128;
+            ch.OutPan   = 128;
+            ch.FinalPan = 128;
+            ch.VibDepth = 0;
+
+            voiceSetVolume(i, ch.FinalVol, ch.FinalPan);
+        }
+    }
+
+
     
     
 }
